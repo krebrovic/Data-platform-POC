@@ -3,28 +3,62 @@ import { useState } from 'react';
 import axios from 'axios';
 
 function App() {
-  const [form, setForm] = useState({host: '', port: 5432, user: '', password: '', database: ''});
+  const [form, setForm] = useState({
+    host: '',
+    port: 5432,
+    user: '',
+    password: '',
+    database: ''
+  });
+
   const [tables, setTables] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async () => {
+    setLoading(true);
+    setError('');
+    setTables([]);
     try {
-      const res = await axios.post('/connect-db/', form);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/connect-db/`, form);
       setTables(res.data.tables);
     } catch (err) {
-      alert(err.response?.data?.detail || 'Connection failed');
+      setError(err.response?.data?.detail || 'Connection failed');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold">Connect to Database</h1>
-      <input placeholder="Host" onChange={e => setForm({...form, host: e.target.value})} />
-      {/* repeat for user, password, etc */}
-      <button onClick={handleSubmit}>Connect</button>
+    <div className="p-6 max-w-lg mx-auto font-sans">
+      <h1 className="text-2xl font-bold mb-4">Connect to PostgreSQL</h1>
+
+      <div className="space-y-3 mb-4">
+        <input className="w-full p-2 border rounded" name="host" placeholder="Host" onChange={handleChange} />
+        <input className="w-full p-2 border rounded" name="port" placeholder="Port" type="number" value={form.port} onChange={handleChange} />
+        <input className="w-full p-2 border rounded" name="user" placeholder="User" onChange={handleChange} />
+        <input className="w-full p-2 border rounded" name="password" placeholder="Password" type="password" onChange={handleChange} />
+        <input className="w-full p-2 border rounded" name="database" placeholder="Database" onChange={handleChange} />
+        <button className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={handleSubmit} disabled={loading}>
+          {loading ? 'Connecting...' : 'Connect'}
+        </button>
+      </div>
+
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+
       {tables.length > 0 && (
-        <ul>
-          {tables.map(t => <li key={t}>{t}</li>)}
-        </ul>
+        <div>
+          <h2 className="text-lg font-semibold mb-2">Tables found:</h2>
+          <ul className="list-disc list-inside">
+            {tables.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );

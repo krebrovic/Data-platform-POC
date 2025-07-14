@@ -1,18 +1,8 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import sqlalchemy
 
 app = FastAPI()
-
-# CORS middleware: allow requests from any origin (adjust in prod)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # For dev/demo; restrict to frontend domain in prod
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 class DBConfig(BaseModel):
     host: str

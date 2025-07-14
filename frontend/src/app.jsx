@@ -4,11 +4,11 @@ import axios from 'axios';
 
 function App() {
   const [form, setForm] = useState({
-    host: '',
+    host: 'dpg-d1qkl17fte5s73dfjmag-a',
     port: 5432,
-    user: '',
-    password: '',
-    database: ''
+    user: 'krebrovic',
+    password: 'D5YZVGXfXOOS0U5tHbjJIujUhLoxeyNu',
+    database: 'dp_db_4ra7'
   });
 
   const [tables, setTables] = useState([]);

@@ -51,6 +51,23 @@ function App() {
     }
   };
 
+  // ✅ NEW: Generate Data Model
+  const handleGenerateModel = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/generate-data-model/`, {
+        ...form,
+        tables
+      });
+      alert(res.data.model); // Replace with a modal or display in UI later
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Model generation failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="p-6 max-w-3xl mx-auto font-sans">
       <h1 className="text-2xl font-bold mb-4">Data Platform POC</h1>
@@ -80,6 +97,15 @@ function App() {
               </li>
             ))}
           </ul>
+
+          {/* ✅ Add Generate Data Model Button Here */}
+          <button
+            className="mt-4 p-2 bg-green-600 text-white rounded hover:bg-green-700"
+            onClick={handleGenerateModel}
+            disabled={loading}
+          >
+            {loading ? 'Generating Model...' : 'Generate Data Model'}
+          </button>
         </div>
       )}
 

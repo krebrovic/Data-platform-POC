@@ -3,8 +3,12 @@ from pydantic import BaseModel
 from typing import List
 from fastapi import Body
 import sqlalchemy
+from openai import OpenAI
+import os
 
 app = FastAPI()
+# Set your OpenAI API key
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class DBConfig(BaseModel):
     host: str
@@ -49,3 +53,44 @@ def preview_table(config: TablePreviewRequest):
         return {"columns": columns, "rows": rows}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Preview failed: {str(e)}")
+
+class ModelRequest(BaseModel):
+    host: str
+    port: int
+    user: str
+    password: str
+    database: str
+    tables: List[str]
+
+@app.post("/generate-data-model/")
+def generate_data_model(config: ModelRequest):
+    try:
+        url = f"postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}"
+        engine = sqlalchemy.create_engine(url)
+
+        schema_info = ""
+        for table_name in config.tables:
+            meta = sqlalchemy.MetaData()
+            table = sqlalchemy.Table(table_name, meta, autoload_with=engine)
+            schema_info += f"Table: {table_name}\n"
+            for col in table.columns:
+                schema_info += f"- {col.name}: {col.type}\n"
+            schema_info += "\n"
+
+        # Call OpenAI
+        prompt = f"""You are a data architect. Based on the following table schemas, infer foreign key relationships and generate a data model and SQL CREATE TABLE statements:
+
+{schema_info}
+
+Output the relationships and SQL statements.
+"""
+
+        completion = client.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        return {"model": completion.choices[0].message.content}
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Model generation failed: {str(e)}")

@@ -23,7 +23,10 @@ function App() {
     setError('');
     setLoading(true);
     try {
-      const res = await axios.post(${import.meta.env.VITE_API_URL}/connect-db/, form);
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/connect-db/`,
+        form
+      );
       setTables(res.data.tables);
       setSelectedTable(null);
       setPreview(null);
@@ -39,10 +42,13 @@ function App() {
     setLoading(true);
     setSelectedTable(tableName);
     try {
-      const res = await axios.post(${import.meta.env.VITE_API_URL}/preview-table/, {
-        ...form,
-        table_name: tableName
-      });
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/preview-table/`,
+        {
+          ...form,
+          table_name: tableName
+        }
+      );
       setPreview(res.data);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to preview table');
@@ -56,10 +62,13 @@ function App() {
     setError('');
     setLoading(true);
     try {
-      const res = await axios.post(${import.meta.env.VITE_API_URL}/generate-data-model/, {
-        ...form,
-        tables
-      });
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/generate-data-model/`,
+        {
+          ...form,
+          tables
+        }
+      );
       alert(res.data.model); // Replace with a modal or display in UI later
     } catch (err) {
       setError(err.response?.data?.detail || 'Model generation failed');

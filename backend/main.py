@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Body
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import sqlalchemy
@@ -8,12 +9,21 @@ import os
 
 app = FastAPI(title="CloudBricks API", description="Smarter Data Solutions Platform", version="1.0.0")
 
+# Add CORS middleware (allow all origins for testing, restrict in production!)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # Or ["https://your-frontend.onrender.com"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # OpenAI Client (ensure OPENAI_API_KEY is set in Render env vars)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Default DB credentials - replace with your actual connection details!
 DEFAULT_DB = {
-    "host": "dpg-d1qkl17fte5s73dfjmag-a",
+    "host": "dpg-d1qkl17fte5s73dfjmag-a",  # Render internal host
     "port": 5432,
     "user": "krebrovic",
     "password": "D5YZVGXfXOOS0U5tHbjJIujUhLoxeyNu",
@@ -50,15 +60,17 @@ def connect_db(config: DBConfig = Body(default={})):
         database = config.database or DEFAULT_DB["database"]
 
         url = f"postgresql://{user}:{password}@{host}:{port}/{database}"
+        print("Connecting to:", url)
         engine = sqlalchemy.create_engine(url)
         with engine.connect() as conn:
             result = conn.execute(text("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"))
             tables = [row[0] for row in result]
         return {"status": "success", "tables": tables}
     except Exception as e:
+        print("ERROR:", str(e))
         raise HTTPException(status_code=400, detail=f"Connection failed: {str(e)}")
 
-# Table preview model (same change as above: make all optional)
+# Table preview model (make all optional for convenience)
 class TablePreviewRequest(BaseModel):
     host: Optional[str] = None
     port: Optional[int] = None
@@ -89,9 +101,10 @@ def preview_table(config: TablePreviewRequest):
             columns = [col.name for col in table.columns]
         return {"columns": columns, "rows": rows}
     except Exception as e:
+        print("ERROR:", str(e))
         raise HTTPException(status_code=400, detail=f"Preview failed: {str(e)}")
 
-# Data model generation request (same optional logic)
+# Data model generation request (optional logic)
 class ModelRequest(BaseModel):
     host: Optional[str] = None
     port: Optional[int] = None
@@ -139,4 +152,5 @@ Output the relationships and SQL statements.
         return {"model": completion.choices[0].message.content}
 
     except Exception as e:
+        print("ERROR:", str(e))
         raise HTTPException(status_code=400, detail=f"Model generation failed: {str(e)}")

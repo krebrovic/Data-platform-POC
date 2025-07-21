@@ -1,6 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 import sqlalchemy
 from sqlalchemy import text, MetaData, Table
 from openai import OpenAI
@@ -11,31 +11,45 @@ app = FastAPI(title="CloudBricks API", description="Smarter Data Solutions Platf
 # OpenAI Client (ensure OPENAI_API_KEY is set in Render env vars)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Root route
+# Default DB credentials - replace with your actual connection details!
+DEFAULT_DB = {
+    "host": "postgresql://krebrovic:D5YZVGXfXOOS0U5tHbjJIujUhLoxeyNu@dpg-d1qkl17fte5s73dfjmag-a.frankfurt-postgres.render.com/dp_db_4ra7",
+    "port": 5432,
+    "user": "krebrovic",
+    "password": "D5YZVGXfXOOS0U5tHbjJIujUhLoxeyNu",
+    "database": "dp_db_4ra7"
+}
+
+# Database config model - all fields optional for silent connect
+class DBConfig(BaseModel):
+    host: Optional[str] = None
+    port: Optional[int] = None
+    user: Optional[str] = None
+    password: Optional[str] = None
+    database: Optional[str] = None
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to CloudBricks Backend API 🚀", "docs": "/docs"}
 
-# Health check
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
 
-# Database config model
-class DBConfig(BaseModel):
-    host: str
-    port: int
-    user: str
-    password: str
-    database: str
-
 @app.post("/connect-db/")
-def connect_db(config: DBConfig):
+def connect_db(config: DBConfig = Body(default={})):
     """
     Connect to the database and list public tables.
+    Uses default credentials if fields are missing.
     """
     try:
-        url = f"postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}"
+        host = config.host or DEFAULT_DB["host"]
+        port = config.port or DEFAULT_DB["port"]
+        user = config.user or DEFAULT_DB["user"]
+        password = config.password or DEFAULT_DB["password"]
+        database = config.database or DEFAULT_DB["database"]
+
+        url = f"postgresql://{user}:{password}@{host}:{port}/{database}"
         engine = sqlalchemy.create_engine(url)
         with engine.connect() as conn:
             result = conn.execute(text("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"))
@@ -44,13 +58,13 @@ def connect_db(config: DBConfig):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Connection failed: {str(e)}")
 
-# Table preview model
+# Table preview model (same change as above: make all optional)
 class TablePreviewRequest(BaseModel):
-    host: str
-    port: int
-    user: str
-    password: str
-    database: str
+    host: Optional[str] = None
+    port: Optional[int] = None
+    user: Optional[str] = None
+    password: Optional[str] = None
+    database: Optional[str] = None
     table_name: str
 
 @app.post("/preview-table/")
@@ -59,7 +73,13 @@ def preview_table(config: TablePreviewRequest):
     Preview first 10 rows and column names from a table.
     """
     try:
-        url = f"postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}"
+        host = config.host or DEFAULT_DB["host"]
+        port = config.port or DEFAULT_DB["port"]
+        user = config.user or DEFAULT_DB["user"]
+        password = config.password or DEFAULT_DB["password"]
+        database = config.database or DEFAULT_DB["database"]
+
+        url = f"postgresql://{user}:{password}@{host}:{port}/{database}"
         engine = sqlalchemy.create_engine(url)
         with engine.connect() as conn:
             result = conn.execute(text(f"SELECT * FROM {config.table_name} LIMIT 10"))
@@ -71,13 +91,13 @@ def preview_table(config: TablePreviewRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Preview failed: {str(e)}")
 
-# Data model generation request
+# Data model generation request (same optional logic)
 class ModelRequest(BaseModel):
-    host: str
-    port: int
-    user: str
-    password: str
-    database: str
+    host: Optional[str] = None
+    port: Optional[int] = None
+    user: Optional[str] = None
+    password: Optional[str] = None
+    database: Optional[str] = None
     tables: List[str]
 
 @app.post("/generate-data-model/")
@@ -86,7 +106,13 @@ def generate_data_model(config: ModelRequest):
     Generate data model and SQL using GPT based on database schema.
     """
     try:
-        url = f"postgresql://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}"
+        host = config.host or DEFAULT_DB["host"]
+        port = config.port or DEFAULT_DB["port"]
+        user = config.user or DEFAULT_DB["user"]
+        password = config.password or DEFAULT_DB["password"]
+        database = config.database or DEFAULT_DB["database"]
+
+        url = f"postgresql://{user}:{password}@{host}:{port}/{database}"
         engine = sqlalchemy.create_engine(url)
 
         schema_info = ""

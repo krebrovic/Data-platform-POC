@@ -13,7 +13,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Default DB credentials - replace with your actual connection details!
 DEFAULT_DB = {
-    "host": "postgresql://krebrovic:D5YZVGXfXOOS0U5tHbjJIujUhLoxeyNu@dpg-d1qkl17fte5s73dfjmag-a.frankfurt-postgres.render.com/dp_db_4ra7",
+    "host": "dpg-d1qkl17fte5s73dfjmag-a",
     "port": 5432,
     "user": "krebrovic",
     "password": "D5YZVGXfXOOS0U5tHbjJIujUhLoxeyNu",

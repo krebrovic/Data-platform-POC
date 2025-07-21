@@ -1,148 +1,87 @@
-import { useState } from 'react';
-import axios from 'axios';
+import { useState } from "react";
 
 function App() {
-  const [form, setForm] = useState({
-    host: '',
-    port: 5432,
-    user: '',
-    password: '',
-    database: ''
-  });
-  const [tables, setTables] = useState([]);
-  const [selectedTable, setSelectedTable] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/connect-db/`,
-        form
-      );
-      setTables(res.data.tables);
-      setSelectedTable(null);
-      setPreview(null);
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Connection failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePreview = async (tableName) => {
-    setError('');
-    setLoading(true);
-    setSelectedTable(tableName);
-    try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/preview-table/`,
-        {
-          ...form,
-          table_name: tableName
-        }
-      );
-      setPreview(res.data);
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to preview table');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✅ NEW: Generate Data Model
-  const handleGenerateModel = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/generate-data-model/`,
-        {
-          ...form,
-          tables
-        }
-      );
-      alert(res.data.model); // Replace with a modal or display in UI later
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Model generation failed');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Dummy data for demonstration
+  const [pipelines, setPipelines] = useState([
+    {
+      name: "Demonstration Pipeline",
+      created: "2025-07-21",
+      lastRun: "2025-07-21",
+      status: "Active",
+    },
+  ]);
 
   return (
-    <div className="p-6 max-w-3xl mx-auto font-sans">
-      <h1 className="text-2xl font-bold mb-4">Data Platform POC</h1>
+    <div className="min-h-screen bg-gray-50 flex font-sans">
+      {/* Sidebar */}
+      <aside className="w-48 bg-white border-r shadow flex flex-col">
+        <nav className="mt-10 space-y-4">
+          <a href="#" className="block pl-6 py-2 text-lg font-semibold text-blue-700 bg-blue-100 rounded-r-full">
+            Pipelines
+          </a>
+          <a href="#" className="block pl-6 py-2 text-lg text-gray-700 hover:bg-blue-50 rounded-r-full">
+            Connections
+          </a>
+        </nav>
+      </aside>
+      
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col items-center">
+        {/* Header */}
+        <header className="w-full py-8 text-center">
+          <h1 className="text-2xl font-semibold">
+            CloudBricks AI powered Data Platform - demonstration
+          </h1>
+        </header>
 
-      <div className="space-y-3 mb-4">
-        <input className="w-full p-2 border rounded" name="host" placeholder="Host" onChange={handleChange} />
-        <input className="w-full p-2 border rounded" name="port" placeholder="Port" type="number" value={form.port} onChange={handleChange} />
-        <input className="w-full p-2 border rounded" name="user" placeholder="User" onChange={handleChange} />
-        <input className="w-full p-2 border rounded" name="password" placeholder="Password" type="password" onChange={handleChange} />
-        <input className="w-full p-2 border rounded" name="database" placeholder="Database" onChange={handleChange} />
-        <button className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={handleSubmit} disabled={loading}>
-          {loading ? 'Connecting...' : 'Connect'}
-        </button>
-      </div>
-
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-
-      {tables.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2">Tables:</h2>
-          <ul className="list-disc list-inside space-y-1">
-            {tables.map((t) => (
-              <li key={t}>
-                <button className="text-blue-600 underline" onClick={() => handlePreview(t)}>
-                  {t}
-                </button>
-              </li>
-            ))}
-          </ul>
-
-          {/* ✅ Add Generate Data Model Button Here */}
+        {/* Pipelines Panel */}
+        <section className="w-[90%] max-w-5xl bg-white border shadow-lg rounded p-8 relative">
+          {/* New Pipeline Button */}
           <button
-            className="mt-4 p-2 bg-green-600 text-white rounded hover:bg-green-700"
-            onClick={handleGenerateModel}
-            disabled={loading}
+            className="absolute right-8 top-8 px-5 py-2 border-2 border-black rounded text-lg font-semibold hover:bg-gray-100"
           >
-            {loading ? 'Generating Model...' : 'Generate Data Model'}
+            New Pipeline
           </button>
-        </div>
-      )}
 
-      {preview && (
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold mb-2">Preview: {selectedTable}</h2>
-          <div className="overflow-auto border rounded">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="bg-gray-100">
-                  {preview.columns.map((col) => (
-                    <th key={col} className="text-left p-2 border-b">{col}</th>
-                  ))}
+          {/* Section Title */}
+          <h2 className="text-xl font-semibold mb-2">Pipelines</h2>
+
+          {/* Explanation */}
+          <div className="mb-4 text-sm text-gray-600">
+            [explanation] - this is big div where all the pipelines that are created will show, they will have button on the right side. For the beginning you can just create a dummy pipeline for showcase like shown below.
+          </div>
+
+          {/* Pipelines Table */}
+          <div className="overflow-x-auto border rounded">
+            <table className="min-w-full text-center text-base">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2 border">Demonstration Pipeline</th>
+                  <th className="p-2 border">Created: 2025-07-21</th>
+                  <th className="p-2 border">Last Run: 2025-07-21</th>
+                  <th className="p-2 border">Status: Active</th>
+                  <th className="p-2 border"></th>
+                  <th className="p-2 border"></th>
                 </tr>
               </thead>
               <tbody>
-                {preview.rows.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50">
-                    {preview.columns.map((col) => (
-                      <td key={col} className="p-2 border-b">{String(row[col])}</td>
-                    ))}
-                  </tr>
-                ))}
+                <tr>
+                  <td className="p-2 border font-semibold">{pipelines[0].name}</td>
+                  <td className="p-2 border">{pipelines[0].created}</td>
+                  <td className="p-2 border">{pipelines[0].lastRun}</td>
+                  <td className="p-2 border">{pipelines[0].status}</td>
+                  <td className="p-2 border">
+                    <button className="px-4 py-1 border rounded bg-gray-200 hover:bg-gray-300 font-semibold">edit</button>
+                  </td>
+                  <td className="p-2 border">
+                    <button className="px-4 py-1 border rounded bg-gray-200 hover:bg-gray-300 font-semibold text-red-600">delete</button>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        </section>
+      </main>
     </div>
   );
 }

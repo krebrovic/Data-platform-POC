@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState } from "react";
+import CreatePipeline from "./CreatePipeline";
 
 function App() {
   const [activePage, setActivePage] = useState("pipelines");
@@ -22,34 +22,10 @@ function App() {
     // Add more connections later
   ];
 
-  // For New Pipeline form
-  const [selectedConnection, setSelectedConnection] = useState(connections[0].id);
-  const [tables, setTables] = useState([]);
-  const [selectedTable, setSelectedTable] = useState("");
-  const [loadingTables, setLoadingTables] = useState(false);
-  const [error, setError] = useState("");
-
-  // When the form shows (or connection changes), load tables from backend
-  useEffect(() => {
-    if (!showNewPipeline) return;
-
-    const fetchTables = async () => {
-      setLoadingTables(true);
-      setError("");
-      try {
-        // For now, always use the demo connection (no credentials needed)
-        const res = await axios.post(`${import.meta.env.VITE_API_URL}/connect-db/`, {});
-        setTables(res.data.tables || []);
-        setSelectedTable(res.data.tables ? res.data.tables[0] : "");
-      } catch (err) {
-        setError("Failed to fetch tables");
-        setTables([]);
-      } finally {
-        setLoadingTables(false);
-      }
-    };
-    fetchTables();
-  }, [showNewPipeline, selectedConnection]);
+  // Callback for finishing or canceling CreatePipeline
+  function handlePipelineDone() {
+    setShowNewPipeline(false);
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans">
@@ -116,67 +92,7 @@ function App() {
 
           {/* Main Panel Content */}
           {activePage === "pipelines" && showNewPipeline ? (
-            // New Pipeline Form
-            <div className="max-w-lg mx-auto space-y-6">
-              {/* Connections Dropdown */}
-              <div>
-                <label className="block mb-1 font-semibold">Connection</label>
-                <select
-                  className="w-full p-2 border rounded"
-                  value={selectedConnection}
-                  onChange={(e) => setSelectedConnection(e.target.value)}
-                >
-                  {connections.map((conn) => (
-                    <option key={conn.id} value={conn.id}>
-                      {conn.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {/* Tables Dropdown */}
-              <div>
-                <label className="block mb-1 font-semibold">Table</label>
-                {loadingTables ? (
-                  <div>Loading tables...</div>
-                ) : error ? (
-                  <div className="text-red-600">{error}</div>
-                ) : (
-                  <select
-                    className="w-full p-2 border rounded"
-                    value={selectedTable}
-                    onChange={(e) => setSelectedTable(e.target.value)}
-                  >
-                    {tables.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-              {/* Buttons */}
-              <div className="flex gap-4">
-                <button
-                  className="bg-blue-700 text-white px-5 py-2 rounded font-semibold hover:bg-blue-800"
-                  onClick={() => {
-                    // Submit/save pipeline action here
-                    alert(
-                      `Pipeline created!\nConnection: ${selectedConnection}\nTable: ${selectedTable}`
-                    );
-                    setShowNewPipeline(false);
-                  }}
-                  disabled={!selectedTable}
-                >
-                  Save
-                </button>
-                <button
-                  className="bg-gray-300 text-gray-800 px-5 py-2 rounded font-semibold hover:bg-gray-400"
-                  onClick={() => setShowNewPipeline(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
+            <CreatePipeline onDone={handlePipelineDone} />
           ) : activePage === "pipelines" ? (
             // Pipelines Table
             <div className="overflow-x-auto border rounded">

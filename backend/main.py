@@ -94,7 +94,7 @@ def preview_table(config: TablePreviewRequest):
         url = f"postgresql://{user}:{password}@{host}:{port}/{database}"
         engine = sqlalchemy.create_engine(url)
         with engine.connect() as conn:
-            result = conn.execute(text(f"SELECT * FROM {config.table_name} LIMIT 10"))
+            result = conn.execute(text(f"SELECT  column_name,  data_type FROM information_schema.columns WHERE table_schema = 'public' ORDER BY table_name, ordinal_position"))
             rows = [dict(row) for row in result]
             meta = MetaData()
             table = Table(config.table_name, meta, autoload_with=engine)

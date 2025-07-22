@@ -154,12 +154,33 @@ def generate_data_model(config: ModelRequest = Body(...)):
                     schema_info += f"- {col.name}: {col.type}\n"
             schema_info += "\n"
 
-        prompt = f"""You are a data architect and you are building a data warehouse. Based on the following table schemas (showing only selected columns), infer foreign key relationships and generate a data model and SQL CREATE TABLE statements:
+        prompt = f"""
+                    You are a senior data engineer designing a modern data warehouse.
 
-{schema_info}
+                    Given the following source table schemas (with only the listed columns):
+                    {schema_info}
 
-Output the relationships and SQL statements.
-"""
+                    For each source table:
+                    1. Create a RAW table for it in the data warehouse. The RAW table should have the same columns as the source table, use the same name as the source table with the suffix _raw (e.g., customer_raw), and follow best practices for data warehouse raw zones.
+                    2. Add standard audit columns to each RAW table:
+                    - dw_created_at TIMESTAMP
+                    - dw_updated_at TIMESTAMP
+                    - batch_id VARCHAR
+                    (You may add others if you recommend.)
+                    3. Generate the full DDL (CREATE TABLE statements) for these RAW tables, specifying data types (use SQL standard/Postgres types).
+                    4. For each table, generate a SQL script to perform a full load from source to warehouse RAW table:
+                    a) DELETE FROM {table}_raw;
+                    b) INSERT INTO {table}_raw (...columns..., audit columns) SELECT ...columns..., current_timestamp, current_timestamp, <batch_id> FROM {source_table};
+                    (Assume simple 1:1 mapping for now.)
+
+                    Output:
+                    - The DDLs for each RAW table
+                    - The full SQL loading scripts (delete + insert) for each
+                    - If you see issues in the schemas, call out and recommend improvements
+                    - Follow data engineering best practices (naming, types, audit columns, conventions)
+
+                    Format your answer clearly with code blocks and explanations.
+                """
 
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",

@@ -82,7 +82,7 @@ class TablePreviewRequest(BaseModel):
 @app.post("/preview-table/")
 def preview_table(config: TablePreviewRequest):
     """
-    Preview first 10 rows and column names/types from a table.
+    Return columns and their types for a given table.
     """
     try:
         host = config.host or DEFAULT_DB["host"]
@@ -109,13 +109,7 @@ def preview_table(config: TablePreviewRequest):
             )
             columns = [{"name": row[0], "type": row[1]} for row in result]
 
-            # Get data preview (first 10 rows)
-            preview_result = conn.execute(
-                text(f"SELECT * FROM {config.table_name} LIMIT 10")
-            )
-            rows = [dict(row._mapping) for row in preview_result]
-
-        return {"columns": columns, "rows": rows}
+        return {"columns": columns}
     except Exception as e:
         print("ERROR:", str(e))
         raise HTTPException(status_code=400, detail=f"Preview failed: {str(e)}")

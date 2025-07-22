@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import DataModelPreview from "./DataModelPreview";
 
-function CreatePipeline({ onDone }) {
+function CreatePipeline() {
   const [step, setStep] = useState(1);
 
   // Step 1: Table multiselect
@@ -12,8 +11,8 @@ function CreatePipeline({ onDone }) {
 
   // Step 2: Columns selection
   const [columnsByTable, setColumnsByTable] = useState({});
-  const [selectedColumns, setSelectedColumns] = useState({});
-  const [expanded, setExpanded] = useState({});
+  const [selectedColumns, setSelectedColumns] = useState({}); // { table: [col, ...] }
+  const [expanded, setExpanded] = useState({}); // Which table accordions are open
 
   // Fetch all tables on mount (Step 1)
   useEffect(() => {
@@ -44,7 +43,8 @@ function CreatePipeline({ onDone }) {
             `${import.meta.env.VITE_API_URL}/preview-table/`,
             { table_name: table }
           );
-          out[table] = (res.data.columns || []).map((col) =>
+          // If your API returns type info, use it here. Otherwise just show name
+          out[table] = (res.data.columns || []).map((col, i) =>
             typeof col === "object"
               ? col // in case columns: [{name, type}]
               : { name: col, type: "unknown" }
@@ -88,19 +88,7 @@ function CreatePipeline({ onDone }) {
     }));
   };
 
-  // === UI ===
-
-  // Step 3: Data Model Preview
-  if (step === 3) {
-    return (
-      <DataModelPreview
-        selectedColumns={selectedColumns}
-        onBack={() => setStep(2)}
-        onDone={onDone}
-      />
-    );
-  }
-
+  // UI
   return (
     <div className="max-w-2xl mx-auto p-6">
       <h2 className="text-xl font-semibold mb-4">Create New Pipeline</h2>
@@ -179,10 +167,16 @@ function CreatePipeline({ onDone }) {
               </div>
             ))}
           </div>
-          {/* Next Step button to advance to Data Model Preview */}
+          {/* Example: add a Next or Save button for the next step */}
           <button
             className="mt-6 px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-            onClick={() => setStep(3)}
+            onClick={() => {
+              // Save logic or next step here
+              alert(
+                "Selected columns:\n" +
+                  JSON.stringify(selectedColumns, null, 2)
+              );
+            }}
             disabled={
               selectedTables.length === 0 ||
               selectedTables.some(
@@ -190,13 +184,7 @@ function CreatePipeline({ onDone }) {
               )
             }
           >
-            Next Step
-          </button>
-          <button
-            className="ml-4 px-6 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-            onClick={onDone}
-          >
-            Cancel
+            Save Pipeline
           </button>
         </>
       )}

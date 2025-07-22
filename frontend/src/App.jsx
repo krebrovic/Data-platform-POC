@@ -28,7 +28,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex font-sans">
+    <div className="min-h-screen flex font-sans" style={{ background: "#222" }}>
       {/* Sidebar */}
       <aside className="w-48 bg-white border-r shadow flex flex-col">
         <nav className="mt-10 space-y-4">

@@ -82,7 +82,7 @@ class TablePreviewRequest(BaseModel):
 @app.post("/preview-table/")
 def preview_table(config: TablePreviewRequest):
     """
-    Preview first 10 rows and column names from a table.
+    Preview first 10 rows and column names/types from a table.
     """
     try:
         host = config.host or DEFAULT_DB["host"]
@@ -94,11 +94,27 @@ def preview_table(config: TablePreviewRequest):
         url = f"postgresql://{user}:{password}@{host}:{port}/{database}"
         engine = sqlalchemy.create_engine(url)
         with engine.connect() as conn:
-            result = conn.execute(text(f"SELECT  column_name,  data_type FROM information_schema.columns WHERE table_schema = 'public' ORDER BY table_name, ordinal_position"))
-            rows = [dict(row) for row in result]
-            meta = MetaData()
-            table = Table(config.table_name, meta, autoload_with=engine)
-            columns = [col.name for col in table.columns]
+            # Get columns (name + type) for this table
+            result = conn.execute(
+                text(
+                    """
+                    SELECT column_name, data_type
+                    FROM information_schema.columns
+                    WHERE table_schema = 'public'
+                      AND table_name = :table_name
+                    ORDER BY ordinal_position
+                    """
+                ),
+                {"table_name": config.table_name},
+            )
+            columns = [{"name": row[0], "type": row[1]} for row in result]
+
+            # Get data preview (first 10 rows)
+            preview_result = conn.execute(
+                text(f"SELECT * FROM {config.table_name} LIMIT 10")
+            )
+            rows = [dict(row._mapping) for row in preview_result]
+
         return {"columns": columns, "rows": rows}
     except Exception as e:
         print("ERROR:", str(e))

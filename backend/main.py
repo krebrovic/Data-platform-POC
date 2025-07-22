@@ -115,18 +115,23 @@ def preview_table(config: TablePreviewRequest):
         raise HTTPException(status_code=400, detail=f"Preview failed: {str(e)}")
 
 # Data model generation request (optional logic)
+
+
 class ModelRequest(BaseModel):
     host: Optional[str] = None
     port: Optional[int] = None
     user: Optional[str] = None
     password: Optional[str] = None
     database: Optional[str] = None
-    tables: List[str]
+    tables: Optional[dict] = None  # Now expected as dict: {table_name: [col1, col2, ...]}
+
 
 @app.post("/generate-data-model/")
-def generate_data_model(config: ModelRequest):
+@app.post("/generate-data-model/")
+def generate_data_model(config: ModelRequest = Body(...)):
     """
-    Generate data model and SQL using GPT based on database schema.
+    Generate data model and SQL using GPT based on selected table columns.
+    Expects tables as a dict: { "table_name": ["col1", "col2", ...], ... }
     """
     try:
         host = config.host or DEFAULT_DB["host"]
@@ -139,15 +144,17 @@ def generate_data_model(config: ModelRequest):
         engine = sqlalchemy.create_engine(url)
 
         schema_info = ""
-        for table_name in config.tables:
+        # config.tables is now a dict: {table_name: [col1, col2, ...]}
+        for table_name, selected_cols in (config.tables or {}).items():
             meta = MetaData()
             table = Table(table_name, meta, autoload_with=engine)
             schema_info += f"Table: {table_name}\n"
             for col in table.columns:
-                schema_info += f"- {col.name}: {col.type}\n"
+                if col.name in selected_cols:
+                    schema_info += f"- {col.name}: {col.type}\n"
             schema_info += "\n"
 
-        prompt = f"""You are a data architect. Based on the following table schemas, infer foreign key relationships and generate a data model and SQL CREATE TABLE statements:
+        prompt = f"""You are a data architect and you are building a data warehouse. Based on the following table schemas (showing only selected columns), infer foreign key relationships and generate a data model and SQL CREATE TABLE statements:
 
 {schema_info}
 

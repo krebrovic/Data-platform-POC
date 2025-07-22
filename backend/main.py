@@ -170,7 +170,7 @@ def generate_data_model(config: ModelRequest = Body(...)):
                     3. Generate the full DDL (CREATE TABLE statements) for these RAW tables, specifying data types (use SQL standard/Postgres types).
                     4. For each table, generate a SQL script to perform a full load from source to warehouse RAW table:
                     a) DELETE FROM {table}_raw;
-                    b) INSERT INTO {table}_raw (...columns..., audit columns) SELECT ...columns..., current_timestamp, current_timestamp, <batch_id> FROM {source_table};
+                    b) INSERT INTO {table}_raw (...columns..., audit columns) SELECT ...columns..., current_timestamp, current_timestamp, <batch_id> FROM {table_name};
                     (Assume simple 1:1 mapping for now.)
 
                     Output:

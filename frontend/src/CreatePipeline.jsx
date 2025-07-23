@@ -2,6 +2,11 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import DataModelPreview from "./DataModelPreview";
 
+// Color palette
+const blue = "text-[#2668d3]";
+const blueBg = "bg-[#2668d3]";
+const blueBorder = "border-[#2668d3]";
+
 function CreatePipeline({ onDone }) {
   const [step, setStep] = useState(1);
 
@@ -46,7 +51,7 @@ function CreatePipeline({ onDone }) {
           );
           out[table] = (res.data.columns || []).map((col) =>
             typeof col === "object"
-              ? col // in case columns: [{name, type}]
+              ? col
               : { name: col, type: "unknown" }
           );
         } catch (e) {
@@ -88,8 +93,6 @@ function CreatePipeline({ onDone }) {
     }));
   };
 
-  // === UI ===
-
   // Step 3: Data Model Preview
   if (step === 3) {
     return (
@@ -102,73 +105,83 @@ function CreatePipeline({ onDone }) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h2 className="text-xl font-semibold mb-4">Create New Pipeline</h2>
+    <div className="max-w-2xl mx-auto p-8 bg-[#202021] rounded-2xl shadow-2xl border border-[#252637] mt-8">
+      <h2 className={`text-2xl font-bold mb-6 ${blue}`}>Create New Pipeline</h2>
 
       {step === 1 && (
         <>
-          <label className="block font-semibold mb-2">
-            Select Tables (multiselect)
-          </label>
+          <label className={`block font-semibold mb-2 ${blue}`}>Select Tables (multiselect)</label>
           {loadingTables ? (
-            <div>Loading tables...</div>
+            <div className="text-gray-300">Loading tables...</div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {tables.map((table) => (
-                <label key={table} className="flex items-center gap-2">
+                <label
+                  key={table}
+                  className="flex items-center gap-3 bg-[#26272b] px-3 py-2 rounded-lg hover:bg-[#232536] cursor-pointer"
+                  style={{ color: "#f3f4f6" }}
+                >
                   <input
                     type="checkbox"
                     checked={selectedTables.includes(table)}
                     onChange={() => handleTableSelect(table)}
+                    className={`accent-[#2668d3] w-4 h-4`}
                   />
-                  {table}
+                  <span className="font-medium">{table}</span>
                 </label>
               ))}
             </div>
           )}
-          <button
-            className="mt-6 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            onClick={() => setStep(2)}
-            disabled={selectedTables.length === 0}
-          >
-            Next
-          </button>
+          <div className="flex gap-4 mt-8">
+            <button
+              className={`px-8 py-2 rounded-lg font-bold border-2 ${blueBorder} ${blue} hover:${blueBg} hover:text-white transition`}
+              onClick={() => setStep(2)}
+              disabled={selectedTables.length === 0}
+              style={{
+                background: selectedTables.length === 0 ? "#26272b" : "#2668d3",
+                color: selectedTables.length === 0 ? "#7b8497" : "#fff",
+                cursor: selectedTables.length === 0 ? "not-allowed" : "pointer"
+              }}
+            >
+              Next
+            </button>
+            <button
+              className="px-8 py-2 rounded-lg font-bold border-2 border-gray-400 text-gray-300 hover:bg-gray-700 transition"
+              onClick={onDone}
+            >
+              Cancel
+            </button>
+          </div>
         </>
       )}
 
       {step === 2 && (
         <>
-          <label className="block font-semibold mb-2">
-            Select Columns for Each Table
-          </label>
+          <label className={`block font-semibold mb-3 ${blue}`}>Select Columns for Each Table</label>
           <div>
             {selectedTables.map((table) => (
-              <div key={table} className="mb-4 border rounded">
+              <div key={table} className="mb-4 bg-[#232328] border border-[#2d2e36] rounded-lg">
                 <button
                   onClick={() => toggleExpand(table)}
-                  className="flex items-center gap-2 w-full p-2 bg-gray-200 font-semibold rounded-t"
+                  className={`flex items-center gap-3 w-full px-4 py-3 ${blue} text-lg font-bold rounded-t-lg focus:outline-none`}
+                  style={{ background: "#18181b" }}
                 >
-                  <span>
-                    {expanded[table] ? "▼" : "▶"}
-                  </span>
+                  <span>{expanded[table] ? "▼" : "▶"}</span>
                   {table}
                 </button>
                 {expanded[table] && (
-                  <div className="pl-8 py-2 space-y-2 bg-white">
+                  <div className="pl-8 py-3 space-y-2 bg-[#232328] rounded-b-lg">
                     {columnsByTable[table] && columnsByTable[table].length > 0 ? (
                       columnsByTable[table].map((col, idx) => (
-                        <label key={col.name || col} className="flex gap-2 items-center">
+                        <label key={col.name || col} className="flex gap-3 items-center text-gray-100">
                           <input
                             type="checkbox"
                             checked={selectedColumns[table]?.includes(col.name || col)}
                             onChange={() => handleColumnSelect(table, col.name || col)}
+                            className={`accent-[#2668d3] w-4 h-4`}
                           />
-                          <span className="font-semibold">
-                            {col.name || col}
-                          </span>
-                          <span className="ml-2 text-gray-500">
-                            {col.type || ""}
-                          </span>
+                          <span className="font-medium">{col.name || col}</span>
+                          <span className="ml-2 text-gray-400 text-sm">{col.type || ""}</span>
                         </label>
                       ))
                     ) : (
@@ -179,25 +192,55 @@ function CreatePipeline({ onDone }) {
               </div>
             ))}
           </div>
-          {/* Next Step button to advance to Data Model Preview */}
-          <button
-            className="mt-6 px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-            onClick={() => setStep(3)}
-            disabled={
-              selectedTables.length === 0 ||
-              selectedTables.some(
-                (table) => !selectedColumns[table] || selectedColumns[table].length === 0
-              )
-            }
-          >
-            Next Step
-          </button>
-          <button
-            className="ml-4 px-6 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-            onClick={onDone}
-          >
-            Cancel
-          </button>
+          <div className="flex gap-4 mt-8">
+            <button
+              className={`px-8 py-2 rounded-lg font-bold border-2 ${blueBorder} ${blue} hover:${blueBg} hover:text-white transition`}
+              onClick={() => setStep(3)}
+              disabled={
+                selectedTables.length === 0 ||
+                selectedTables.some(
+                  (table) => !selectedColumns[table] || selectedColumns[table].length === 0
+                )
+              }
+              style={{
+                background:
+                  selectedTables.length === 0 ||
+                  selectedTables.some(
+                    (table) => !selectedColumns[table] || selectedColumns[table].length === 0
+                  )
+                    ? "#26272b"
+                    : "#2668d3",
+                color:
+                  selectedTables.length === 0 ||
+                  selectedTables.some(
+                    (table) => !selectedColumns[table] || selectedColumns[table].length === 0
+                  )
+                    ? "#7b8497"
+                    : "#fff",
+                cursor:
+                  selectedTables.length === 0 ||
+                  selectedTables.some(
+                    (table) => !selectedColumns[table] || selectedColumns[table].length === 0
+                  )
+                    ? "not-allowed"
+                    : "pointer"
+              }}
+            >
+              Next Step
+            </button>
+            <button
+              className="px-8 py-2 rounded-lg font-bold border-2 border-gray-400 text-gray-300 hover:bg-gray-700 transition"
+              onClick={() => setStep(1)}
+            >
+              Previous Step
+            </button>
+            <button
+              className="px-8 py-2 rounded-lg font-bold border-2 border-gray-400 text-gray-300 hover:bg-gray-700 transition"
+              onClick={onDone}
+            >
+              Cancel
+            </button>
+          </div>
         </>
       )}
     </div>

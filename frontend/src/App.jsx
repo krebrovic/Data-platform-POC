@@ -70,11 +70,11 @@ function App() {
           </h1>
         </header>
 
-        <section className="w-[90%] max-w-5xl bg-white border shadow-lg rounded p-8 relative">
+        <section className="w-[95%] max-w-5xl bg-[#1d1d1d] border border-[#232323] shadow-xl rounded-xl p-8 relative">
           {/* Top-right button (hide on new pipeline form) */}
           {activePage === "pipelines" && !showNewPipeline && (
             <button
-              className="absolute right-8 top-8 px-5 py-2 border-2 border-[#2967d6] rounded text-lg font-semibold hover:bg-[#eaf1fd] text-[#2967d6]"
+              className="absolute right-8 top-8 px-5 py-2 border-2 border-[#2967d6] rounded text-lg font-semibold hover:bg-[#232323] text-[#2967d6] bg-[#1d1d1d] transition"
               onClick={() => setShowNewPipeline(true)}
             >
               New Pipeline
@@ -95,32 +95,48 @@ function App() {
             <CreatePipeline onDone={handlePipelineDone} />
           ) : activePage === "pipelines" ? (
             // Pipelines Table
-            <div className="overflow-x-auto border rounded">
-              <table className="min-w-full text-center text-base text-[#2967d6]">
-                <thead className="bg-[#eaf1fd]">
+            <div className="overflow-x-auto border border-[#232323] rounded-lg bg-[#232323]">
+              <table className="min-w-full text-center text-base text-[#2967d6] bg-[#232323] rounded-lg">
+                <thead className="bg-[#191e24]">
                   <tr>
-                    <th className="p-2 border font-semibold">Demonstration Pipeline</th>
-                    <th className="p-2 border font-semibold">Created: 2025-07-21</th>
-                    <th className="p-2 border font-semibold">Last Run: 2025-07-21</th>
-                    <th className="p-2 border font-semibold">Status: Active</th>
-                    <th className="p-2 border"></th>
-                    <th className="p-2 border"></th>
+                    <th className="p-2 border-b border-[#232323] font-semibold">
+                      Demonstration Pipeline
+                    </th>
+                    <th className="p-2 border-b border-[#232323] font-semibold">
+                      Created: 2025-07-21
+                    </th>
+                    <th className="p-2 border-b border-[#232323] font-semibold">
+                      Last Run: 2025-07-21
+                    </th>
+                    <th className="p-2 border-b border-[#232323] font-semibold">
+                      Status: Active
+                    </th>
+                    <th className="p-2 border-b border-[#232323]"></th>
+                    <th className="p-2 border-b border-[#232323]"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {pipelines.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-[#f0f6ff]">
-                      <td className="p-2 border font-semibold">{item.name}</td>
-                      <td className="p-2 border">{item.created}</td>
-                      <td className="p-2 border">{item.lastRun}</td>
-                      <td className="p-2 border">{item.status}</td>
-                      <td className="p-2 border">
-                        <button className="px-4 py-1 border rounded bg-[#eaf1fd] hover:bg-[#dde6ff] font-semibold text-[#2967d6]">
+                    <tr key={idx} className="hover:bg-[#222]">
+                      <td className="p-2 border-b border-[#232323] font-semibold">
+                        {item.name}
+                      </td>
+                      <td className="p-2 border-b border-[#232323]">
+                        {item.created}
+                      </td>
+                      <td className="p-2 border-b border-[#232323]">
+                        {item.lastRun}
+                      </td>
+                      <td className="p-2 border-b border-[#232323]">
+                        {item.status}
+                      </td>
+                      <td className="p-2 border-b border-[#232323]">
+                        <button className="px-4 py-1 border border-[#2967d6] rounded bg-[#191e24] hover:bg-[#232323] font-semibold text-[#2967d6] transition">
                           edit
                         </button>
                       </td>
-                      <td className="p-2 border">
-                        <button className="px-4 py-1 border rounded bg-[#eaf1fd] hover:bg-[#ffd8d8] font-semibold text-red-500">
+                      <td className="p-2 border-b border-[#232323]">
+                        <button className="px-4 py-1 border border-red-500 rounded bg-[#191e24] hover:bg-[#361d1d] font-semibold text-red-500 transition">
                           delete
                         </button>
                       </td>
@@ -131,32 +147,48 @@ function App() {
             </div>
           ) : (
             // Connections Table
-            <div className="overflow-x-auto border rounded">
-              <table className="min-w-full text-center text-base text-[#2967d6]">
-                <thead className="bg-[#eaf1fd]">
+            <div className="overflow-x-auto border border-[#232323] rounded-lg bg-[#232323]">
+              <table className="min-w-full text-center text-base text-[#2967d6] bg-[#232323] rounded-lg">
+                <thead className="bg-[#191e24]">
                   <tr>
-                    <th className="p-2 border font-semibold">Demo connection</th>
-                    <th className="p-2 border font-semibold">Created: 2025-07-21</th>
-                    <th className="p-2 border font-semibold">Last Run: 2025-07-21</th>
-                    <th className="p-2 border font-semibold">Status: Active</th>
-                    <th className="p-2 border"></th>
-                    <th className="p-2 border"></th>
+                    <th className="p-2 border-b border-[#232323] font-semibold">
+                      Demo connection
+                    </th>
+                    <th className="p-2 border-b border-[#232323] font-semibold">
+                      Created: 2025-07-21
+                    </th>
+                    <th className="p-2 border-b border-[#232323] font-semibold">
+                      Last Run: 2025-07-21
+                    </th>
+                    <th className="p-2 border-b border-[#232323] font-semibold">
+                      Status: Active
+                    </th>
+                    <th className="p-2 border-b border-[#232323]"></th>
+                    <th className="p-2 border-b border-[#232323]"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {connections.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-[#f0f6ff]">
-                      <td className="p-2 border font-semibold">{item.name}</td>
-                      <td className="p-2 border">2025-07-21</td>
-                      <td className="p-2 border">2025-07-21</td>
-                      <td className="p-2 border">Active</td>
-                      <td className="p-2 border">
-                        <button className="px-4 py-1 border rounded bg-[#eaf1fd] hover:bg-[#dde6ff] font-semibold text-[#2967d6]">
+                    <tr key={idx} className="hover:bg-[#222]">
+                      <td className="p-2 border-b border-[#232323] font-semibold">
+                        {item.name}
+                      </td>
+                      <td className="p-2 border-b border-[#232323]">
+                        2025-07-21
+                      </td>
+                      <td className="p-2 border-b border-[#232323]">
+                        2025-07-21
+                      </td>
+                      <td className="p-2 border-b border-[#232323]">
+                        Active
+                      </td>
+                      <td className="p-2 border-b border-[#232323]">
+                        <button className="px-4 py-1 border border-[#2967d6] rounded bg-[#191e24] hover:bg-[#232323] font-semibold text-[#2967d6] transition">
                           edit
                         </button>
                       </td>
-                      <td className="p-2 border">
-                        <button className="px-4 py-1 border rounded bg-[#eaf1fd] hover:bg-[#ffd8d8] font-semibold text-red-500">
+                      <td className="p-2 border-b border-[#232323]">
+                        <button className="px-4 py-1 border border-red-500 rounded bg-[#191e24] hover:bg-[#361d1d] font-semibold text-red-500 transition">
                           delete
                         </button>
                       </td>

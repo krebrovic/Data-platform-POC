@@ -1,202 +1,220 @@
-import { useState } from "react";
-import CreatePipeline from "./CreatePipeline";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-function App() {
-  const [activePage, setActivePage] = useState("pipelines");
-  const [showNewPipeline, setShowNewPipeline] = useState(false);
+function CreatePipeline({ onDone }) {
+  const [step, setStep] = useState(1);
 
-  // Dummy data
-  const pipelines = [
-    {
-      name: "Demonstration Pipeline",
-      created: "2025-07-21",
-      lastRun: "2025-07-21",
-      status: "Active",
-    },
-  ];
-  const connections = [
-    {
-      name: "Demo Connection",
-      id: "demo",
-    },
-    // Add more connections later
-  ];
+  // Step 1: Table multiselect
+  const [tables, setTables] = useState([]);
+  const [selectedTables, setSelectedTables] = useState([]);
+  const [loadingTables, setLoadingTables] = useState(false);
 
-  // Callback for finishing or canceling CreatePipeline
-  function handlePipelineDone() {
-    setShowNewPipeline(false);
-  }
+  // Step 2: Columns selection
+  const [columnsByTable, setColumnsByTable] = useState({});
+  const [selectedColumns, setSelectedColumns] = useState({}); // { table: [col, ...] }
+  const [expanded, setExpanded] = useState({}); // Which table accordions are open
+
+  // Fetch all tables on mount (Step 1)
+  useEffect(() => {
+    async function fetchTables() {
+      setLoadingTables(true);
+      try {
+        const res = await axios.post(
+          `${import.meta.env.VITE_API_URL}/connect-db/`, {}
+        );
+        setTables(res.data.tables || []);
+      } catch (err) {
+        setTables([]);
+      } finally {
+        setLoadingTables(false);
+      }
+    }
+    fetchTables();
+  }, []);
+
+  // Step 2: When step advances, fetch columns for selected tables
+  useEffect(() => {
+    async function fetchColumnsForTables() {
+      if (step !== 2 || selectedTables.length === 0) return;
+      const out = {};
+      for (const table of selectedTables) {
+        try {
+          const res = await axios.post(
+            `${import.meta.env.VITE_API_URL}/preview-table/`,
+            { table_name: table }
+          );
+          out[table] = (res.data.columns || []).map((col, i) =>
+            typeof col === "object"
+              ? col
+              : { name: col, type: "unknown" }
+          );
+        } catch (e) {
+          out[table] = [];
+        }
+      }
+      setColumnsByTable(out);
+    }
+    if (step === 2) fetchColumnsForTables();
+  }, [step, selectedTables]);
+
+  // Step 1 handler: Multiselect tables
+  const handleTableSelect = (table) => {
+    setSelectedTables((prev) =>
+      prev.includes(table)
+        ? prev.filter((t) => t !== table)
+        : [...prev, table]
+    );
+  };
+
+  // Step 2 handler: Multiselect columns for a table
+  const handleColumnSelect = (table, colName) => {
+    setSelectedColumns((prev) => {
+      const prevCols = prev[table] || [];
+      return {
+        ...prev,
+        [table]: prevCols.includes(colName)
+          ? prevCols.filter((c) => c !== colName)
+          : [...prevCols, colName],
+      };
+    });
+  };
+
+  // Step 2 handler: Accordion expand/collapse
+  const toggleExpand = (table) => {
+    setExpanded((prev) => ({
+      ...prev,
+      [table]: !prev[table],
+    }));
+  };
 
   return (
-    <div className="min-h-screen flex font-sans bg-[#232323]">
-      {/* Sidebar */}
-      <aside className="w-52 bg-[#16181a] border-r border-[#232b38] flex flex-col pt-10 min-h-screen">
-        <nav className="space-y-4">
-          <button
-            className={`block pl-6 py-2 text-lg font-bold rounded-r-full transition ${
-              activePage === "pipelines"
-                ? "text-[#2967d6] bg-[#141d26] shadow"
-                : "text-[#7ca0de] hover:bg-[#232b38] hover:text-[#2967d6]"
-            }`}
-            onClick={() => {
-              setActivePage("pipelines");
-              setShowNewPipeline(false);
-            }}
-          >
-            Pipelines
-          </button>
-          <button
-            className={`block pl-6 py-2 text-lg font-bold rounded-r-full transition ${
-              activePage === "connections"
-                ? "text-[#2967d6] bg-[#141d26] shadow"
-                : "text-[#7ca0de] hover:bg-[#232b38] hover:text-[#2967d6]"
-            }`}
-            onClick={() => {
-              setActivePage("connections");
-              setShowNewPipeline(false);
-            }}
-          >
-            Connections
-          </button>
-        </nav>
-      </aside>
+    <div className="max-w-2xl mx-auto p-10 rounded-2xl shadow-lg bg-[#191a1e] border border-[#2a3250]">
+      <h2 className="text-2xl font-bold mb-6 text-[#2967d6]">
+        Create New Pipeline
+      </h2>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center bg-[#232323]">
-        {/* Header */}
-        <header className="w-full py-10 text-center">
-          <h1 className="text-3xl font-extrabold text-[#2967d6] tracking-tight drop-shadow">
-            CloudBricks AI powered Data Platform
-          </h1>
-          <div className="text-lg mt-2 text-[#b0b4c1] font-semibold">demonstration</div>
-        </header>
-
-        <section className="w-[96%] max-w-5xl bg-[#1d1d1d] border border-[#283552] shadow-2xl rounded-2xl p-8 mb-10 relative">
-          {/* Top-right button (hide on new pipeline form) */}
-          {activePage === "pipelines" && !showNewPipeline && (
-            <button
-              className="absolute right-10 top-10 px-6 py-2 border-2 border-[#2967d6] text-[#2967d6] bg-[#232323] rounded-lg font-bold hover:bg-[#162136] hover:text-[#60aaff] shadow transition"
-              onClick={() => setShowNewPipeline(true)}
-            >
-              New Pipeline
-            </button>
-          )}
-
-          {/* Section Title */}
-          <h2 className="text-2xl font-bold mb-7 text-[#2967d6]">
-            {activePage === "pipelines"
-              ? showNewPipeline
-                ? "Create New Pipeline"
-                : "Pipelines"
-              : "Connections"}
-          </h2>
-
-          {/* Main Panel Content */}
-          {activePage === "pipelines" && showNewPipeline ? (
-            <CreatePipeline onDone={handlePipelineDone} />
-          ) : activePage === "pipelines" ? (
-            // Pipelines Table
-            <div className="overflow-x-auto rounded-2xl shadow border border-[#283552] bg-[#191a1e]">
-              <table className="min-w-full rounded-xl overflow-hidden">
-                <thead>
-                  <tr className="bg-[#162136]">
-                    <th className="py-4 px-6 font-bold text-[#2967d6] text-left rounded-tl-xl">
-                      Pipeline
-                    </th>
-                    <th className="py-4 px-6 font-bold text-[#2967d6] text-left">
-                      Created
-                    </th>
-                    <th className="py-4 px-6 font-bold text-[#2967d6] text-left">
-                      Last Run
-                    </th>
-                    <th className="py-4 px-6 font-bold text-[#2967d6] text-left">
-                      Status
-                    </th>
-                    <th className="py-4 px-6 rounded-tr-xl"></th>
-                    <th className="py-4 px-6"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pipelines.map((item, idx) => (
-                    <tr
-                      key={idx}
-                      className="bg-[#232323] hover:bg-[#282c34] border-b border-[#283552] transition"
-                    >
-                      <td className="py-3 px-6 font-bold text-[#2967d6]">{item.name}</td>
-                      <td className="py-3 px-6 text-[#b0b4c1]">{item.created}</td>
-                      <td className="py-3 px-6 text-[#b0b4c1]">{item.lastRun}</td>
-                      <td className="py-3 px-6">
-                        <span className="text-green-400 font-semibold">{item.status}</span>
-                      </td>
-                      <td className="py-3 px-6">
-                        <button className="px-4 py-1 border border-[#2967d6] rounded hover:bg-[#162136] font-bold text-[#2967d6] transition">
-                          edit
-                        </button>
-                      </td>
-                      <td className="py-3 px-6">
-                        <button className="px-4 py-1 border border-red-500 rounded hover:bg-[#361d1d] font-bold text-red-400 transition">
-                          delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+      {step === 1 && (
+        <>
+          <label className="block font-semibold mb-4 text-[#2967d6]">
+            Select Tables (multiselect)
+          </label>
+          {loadingTables ? (
+            <div className="text-[#b0b4c1]">Loading tables...</div>
           ) : (
-            // Connections Table
-            <div className="overflow-x-auto rounded-2xl shadow border border-[#283552] bg-[#191a1e]">
-              <table className="min-w-full rounded-xl overflow-hidden">
-                <thead>
-                  <tr className="bg-[#162136]">
-                    <th className="py-4 px-6 font-bold text-[#2967d6] text-left rounded-tl-xl">
-                      Connection
-                    </th>
-                    <th className="py-4 px-6 font-bold text-[#2967d6] text-left">
-                      Created
-                    </th>
-                    <th className="py-4 px-6 font-bold text-[#2967d6] text-left">
-                      Last Run
-                    </th>
-                    <th className="py-4 px-6 font-bold text-[#2967d6] text-left">
-                      Status
-                    </th>
-                    <th className="py-4 px-6 rounded-tr-xl"></th>
-                    <th className="py-4 px-6"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {connections.map((item, idx) => (
-                    <tr
-                      key={idx}
-                      className="bg-[#232323] hover:bg-[#282c34] border-b border-[#283552] transition"
-                    >
-                      <td className="py-3 px-6 font-bold text-[#2967d6]">{item.name}</td>
-                      <td className="py-3 px-6 text-[#b0b4c1]">2025-07-21</td>
-                      <td className="py-3 px-6 text-[#b0b4c1]">2025-07-21</td>
-                      <td className="py-3 px-6">
-                        <span className="text-green-400 font-semibold">Active</span>
-                      </td>
-                      <td className="py-3 px-6">
-                        <button className="px-4 py-1 border border-[#2967d6] rounded hover:bg-[#162136] font-bold text-[#2967d6] transition">
-                          edit
-                        </button>
-                      </td>
-                      <td className="py-3 px-6">
-                        <button className="px-4 py-1 border border-red-500 rounded hover:bg-[#361d1d] font-bold text-red-400 transition">
-                          delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-3">
+              {tables.map((table) => (
+                <label key={table} className="flex items-center gap-3 text-[#b0b4c1] hover:text-[#60aaff] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedTables.includes(table)}
+                    onChange={() => handleTableSelect(table)}
+                    className="accent-[#2967d6] w-5 h-5"
+                  />
+                  <span className="text-lg">{table}</span>
+                </label>
+              ))}
             </div>
           )}
-        </section>
-      </main>
+          <div className="flex gap-4 mt-8">
+            <button
+              className="px-7 py-2 bg-[#2967d6] text-white rounded-lg font-semibold hover:bg-[#185ac6] transition"
+              onClick={() => setStep(2)}
+              disabled={selectedTables.length === 0}
+            >
+              Next
+            </button>
+            <button
+              className="px-7 py-2 bg-[#232323] border border-[#3c4562] text-[#b0b4c1] rounded-lg font-semibold hover:bg-[#232f44] transition"
+              onClick={onDone}
+              type="button"
+            >
+              Cancel
+            </button>
+          </div>
+        </>
+      )}
+
+      {step === 2 && (
+        <>
+          <label className="block font-semibold mb-4 text-[#2967d6]">
+            Select Columns for Each Table
+          </label>
+          <div>
+            {selectedTables.map((table) => (
+              <div key={table} className="mb-5 border border-[#2a3250] rounded-xl overflow-hidden">
+                <button
+                  onClick={() => toggleExpand(table)}
+                  className="flex items-center gap-3 w-full p-3 bg-[#1d2838] font-bold text-[#60aaff] hover:bg-[#222e3e] transition"
+                >
+                  <span>
+                    {expanded[table] ? "▼" : "▶"}
+                  </span>
+                  {table}
+                </button>
+                {expanded[table] && (
+                  <div className="pl-7 py-3 space-y-3 bg-[#191a1e]">
+                    {columnsByTable[table] && columnsByTable[table].length > 0 ? (
+                      columnsByTable[table].map((col, idx) => (
+                        <label
+                          key={col.name || col}
+                          className="flex gap-3 items-center text-[#b0b4c1] hover:text-[#60aaff] cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedColumns[table]?.includes(col.name || col)}
+                            onChange={() => handleColumnSelect(table, col.name || col)}
+                            className="accent-[#2967d6] w-5 h-5"
+                          />
+                          <span className="font-semibold">{col.name || col}</span>
+                          <span className="ml-2 text-[#4a8ad9]">{col.type || ""}</span>
+                        </label>
+                      ))
+                    ) : (
+                      <div className="text-gray-500">Loading columns...</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-4 mt-8">
+            <button
+              className="px-7 py-2 bg-[#2967d6] text-white rounded-lg font-semibold hover:bg-[#185ac6] transition"
+              onClick={() => {
+                // Save logic or next step here
+                alert(
+                  "Selected columns:\n" +
+                    JSON.stringify(selectedColumns, null, 2)
+                );
+              }}
+              disabled={
+                selectedTables.length === 0 ||
+                selectedTables.some(
+                  (table) => !selectedColumns[table] || selectedColumns[table].length === 0
+                )
+              }
+            >
+              Next Step
+            </button>
+            <button
+              className="px-7 py-2 bg-[#232323] border border-[#3c4562] text-[#b0b4c1] rounded-lg font-semibold hover:bg-[#232f44] transition"
+              onClick={() => setStep(1)}
+              type="button"
+            >
+              Previous Step
+            </button>
+            <button
+              className="px-7 py-2 bg-[#232323] border border-[#3c4562] text-[#b0b4c1] rounded-lg font-semibold hover:bg-[#232f44] transition"
+              onClick={onDone}
+              type="button"
+            >
+              Cancel
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
-export default App;
+export default CreatePipeline;

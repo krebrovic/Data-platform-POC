@@ -5,7 +5,7 @@ function App() {
   const [activePage, setActivePage] = useState("pipelines");
   const [showNewPipeline, setShowNewPipeline] = useState(false);
 
-  // Dummy data
+  // Dummy data (replace with real API data later)
   const pipelines = [
     {
       name: "Demonstration Pipeline",
@@ -19,10 +19,10 @@ function App() {
       name: "Demo Connection",
       id: "demo",
     },
-    // Add more connections later
+    // More connections can be added here
   ];
 
-  // Callback for finishing or canceling CreatePipeline
+  // Callback for closing the pipeline creation modal
   function handlePipelineDone() {
     setShowNewPipeline(false);
   }
@@ -68,7 +68,9 @@ function App() {
           <h1 className="text-3xl font-extrabold text-[#2967d6] tracking-tight drop-shadow">
             CloudBricks AI powered Data Platform
           </h1>
-          <div className="text-lg mt-2 text-[#b0b4c1] font-semibold">demonstration</div>
+          <div className="text-lg mt-2 text-[#b0b4c1] font-semibold">
+            demonstration
+          </div>
         </header>
 
         <section className="w-[96%] max-w-5xl bg-[#1d1d1d] border border-[#283552] shadow-2xl rounded-2xl p-8 mb-10 relative">
@@ -122,11 +124,15 @@ function App() {
                       key={idx}
                       className="bg-[#232323] hover:bg-[#282c34] border-b border-[#283552] transition"
                     >
-                      <td className="py-3 px-6 font-bold text-[#2967d6]">{item.name}</td>
+                      <td className="py-3 px-6 font-bold text-[#2967d6]">
+                        {item.name}
+                      </td>
                       <td className="py-3 px-6 text-[#b0b4c1]">{item.created}</td>
                       <td className="py-3 px-6 text-[#b0b4c1]">{item.lastRun}</td>
                       <td className="py-3 px-6">
-                        <span className="text-green-400 font-semibold">{item.status}</span>
+                        <span className="text-green-400 font-semibold">
+                          {item.status}
+                        </span>
                       </td>
                       <td className="py-3 px-6">
                         <button className="px-4 py-1 border border-[#2967d6] rounded hover:bg-[#162136] font-bold text-[#2967d6] transition">
@@ -171,11 +177,15 @@ function App() {
                       key={idx}
                       className="bg-[#232323] hover:bg-[#282c34] border-b border-[#283552] transition"
                     >
-                      <td className="py-3 px-6 font-bold text-[#2967d6]">{item.name}</td>
+                      <td className="py-3 px-6 font-bold text-[#2967d6]">
+                        {item.name}
+                      </td>
                       <td className="py-3 px-6 text-[#b0b4c1]">2025-07-21</td>
                       <td className="py-3 px-6 text-[#b0b4c1]">2025-07-21</td>
                       <td className="py-3 px-6">
-                        <span className="text-green-400 font-semibold">Active</span>
+                        <span className="text-green-400 font-semibold">
+                          Active
+                        </span>
                       </td>
                       <td className="py-3 px-6">
                         <button className="px-4 py-1 border border-[#2967d6] rounded hover:bg-[#162136] font-bold text-[#2967d6] transition">

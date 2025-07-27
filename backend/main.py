@@ -184,7 +184,7 @@ def generate_data_model(config: ModelRequest = Body(...)):
                     - Any notes on schema or improvement recommendations
                     - Follow modern data engineering best practices (naming, types, audit columns, conventions)
 
-                    Format your answer clearly with code blocks and explanations.
+                    Format your answers in format ready to deploy to AWS.
                 """
 
         completion = client.chat.completions.create(

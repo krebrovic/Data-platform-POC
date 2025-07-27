@@ -155,29 +155,34 @@ def generate_data_model(config: ModelRequest = Body(...)):
             schema_info += "\n"
 
         prompt = f"""
-                    You are a senior data engineer designing a modern data warehouse.
+                    You are a senior data engineer building a modern, cloud-native data lakehouse on AWS using Glue Data Catalog and S3 as the storage layer.
 
                     Given the following source table schemas (with only the listed columns):
                     {schema_info}
 
                     For each source table:
-                    1. Create a RAW table for it in the data warehouse. The RAW table should have the same columns as the source table, use the same name as the source table with the suffix _raw (e.g., customer_raw), and follow best practices for data warehouse raw zones.
-                    2. Add standard audit columns to each RAW table:
-                    - dw_created_at TIMESTAMP
-                    - dw_updated_at TIMESTAMP
-                    - batch_id VARCHAR
-                    (You may add others if you recommend.)
-                    3. Generate the full DDL (CREATE TABLE statements) for these RAW tables, specifying data types (use SQL standard/Postgres types).
-                    4. For each table, generate a SQL script to perform a full load from source to warehouse RAW table:
-                    a) DELETE FROM {table}_raw;
-                    b) INSERT INTO {table}_raw (...columns..., audit columns) SELECT ...columns..., current_timestamp, current_timestamp, <batch_id> FROM {table_name};
-                    (Assume simple 1:1 mapping for now.)
 
-                    Output:
-                    - The DDLs for each RAW table
-                    - The full SQL loading scripts (delete + insert) for each
-                    - If you see issues in the schemas, call out and recommend improvements
-                    - Follow data engineering best practices (naming, types, audit columns, conventions)
+                    1. Design a RAW zone table as a Glue Catalog EXTERNAL TABLE, using S3 as the storage location. Use the same name as the source table, suffixed with _raw (e.g., customer_raw).
+                    2. Choose optimal file format (Parquet recommended for analytics, else CSV if needed).
+                    3. The external table DDL should include:
+                    - All the listed columns, mapped to compatible AWS Athena/Presto data types.
+                    - Standard audit columns:
+                        - dw_created_at TIMESTAMP
+                        - dw_updated_at TIMESTAMP
+                        - batch_id STRING
+                        - (Add any other best practice audit columns you recommend.)
+                    - Storage location on S3: Use placeholder like s3://cloudbricks-dp/raw/{table_name}_raw/
+                    - Table properties and SerDe settings for your format (Parquet or CSV).
+
+                    4. Generate the full DDL (CREATE EXTERNAL TABLE) for each RAW table.
+
+                    5. Generate a sample SQL script for inserting/loading data from the source PostgreSQL table to S3 (describe the recommended ETL/ELT approach, e.g., extract to Parquet using Spark or Pandas, upload to S3, then MSCK REPAIR TABLE to refresh partitions if needed).
+
+                    6. Output:
+                    - The Glue-compatible DDL for each RAW table
+                    - Example ETL code (pseudocode or PySpark/pandas+boto3) to extract from Postgres and write to S3 in the correct format
+                    - Any notes on schema or improvement recommendations
+                    - Follow modern data engineering best practices (naming, types, audit columns, conventions)
 
                     Format your answer clearly with code blocks and explanations.
                 """
